@@ -97,8 +97,10 @@ fn main() {
                 sum_down += network.received();
                 sum_up += network.transmitted();
             }
-            speed_up = sum_up * 1000/(lastinfoupdatetime.elapsed().as_millis() as u64);
-            speed_down = sum_down * 1000/(lastinfoupdatetime.elapsed().as_millis() as u64);
+            if lastinfoupdatetime.elapsed().as_millis() != 0{
+                speed_up = sum_up * 1000/(lastinfoupdatetime.elapsed().as_millis() as u64);
+                speed_down = sum_down * 1000/(lastinfoupdatetime.elapsed().as_millis() as u64);
+            }
             lastinfoupdatetime = time::Instant::now();
             refresh_counter = 0 // prevent overflow
         }
