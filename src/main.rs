@@ -14,6 +14,10 @@ struct Args {
     #[arg(short, long, default_value_t = 100)]
     refreshinterval: u64,
 
+    /// Combine icons
+    #[arg(short, long, default_value_t = true)]
+    combineicons: bool,
+
     /// Enable animated icons
     #[arg(short, long, default_value_t = true)]
     animatedicons: bool,
@@ -98,11 +102,16 @@ fn main() {
             lastinfoupdatetime = time::Instant::now();
             refresh_counter = 0 // prevent overflow
         }
-        let mut disp_up_icon = &args.upicon;
-        let mut disp_down_icon = &args.downicon;
+        let mut disp_up_icon = args.upicon.clone();
+        let mut disp_down_icon = args.downicon.clone();
         if args.animatedicons{
-            disp_up_icon = &icons[icons.len()-1-(up_anim_counter.floor() as usize % icons.len())];
-            disp_down_icon = &icons[down_anim_counter.floor() as usize % icons.len()];
+            disp_up_icon = icons[icons.len()-1-(up_anim_counter.floor() as usize % icons.len())].clone();
+            disp_down_icon = icons[down_anim_counter.floor() as usize % icons.len()].clone();
+            if args.combineicons{
+            disp_up_icon = format!("{}{}",args.upicon.clone(),disp_up_icon);
+            disp_down_icon = format!("{}{}",args.downicon.clone(),disp_down_icon);
+            }
+
             up_anim_counter = (up_anim_counter+args.speed_multiplier_lin*(speed_up as f64)+args.speed_multiplier_log10*((speed_up+1) as f64).log10()) % icons.len() as f64;
             down_anim_counter =  (down_anim_counter+args.speed_multiplier_lin*(speed_down as f64)+args.speed_multiplier_log10*((speed_down+1) as f64).log10()) % icons.len() as f64;
         }
