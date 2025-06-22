@@ -19,8 +19,8 @@
       src = pkgs.fetchFromGitHub {
         owner = "make-42";
         repo = "flow";
-        rev = "c0fb308ff664be25f55e385c142b6d9c89ed4156";
-        hash = "sha256-G/U5coANc/cNNZF6ru7EfYvOFj+47PljBa7w2D6hI+g=";
+        rev = "5d86a0009442e2fc1c031cbc38273a80c8e9bfce";
+        hash = "sha256-NF0/gXoe7jIm2LxEGOQcuh5FaeCMBW82i0sYNwiG4fg=";
       };
 
       cargoHash = "sha256-+A5JK0SAhLf1g4wwPNH5j2wqZWXHqU9kwE6ddtG0q7k=";
