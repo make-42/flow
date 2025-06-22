@@ -78,7 +78,6 @@ fn main() {
     let mut lastinfoupdatetime = time::Instant::now();
     let mut speed_up: u64 = 0;
     let mut speed_down: u64 = 0;
-    println!("#{:?}",args);
     let mut refresh_counter = args.nrefresh-1;
     let mut up_anim_counter: f64 = 0.0;
     let mut down_anim_counter: f64 = 0.0;
