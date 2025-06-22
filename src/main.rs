@@ -15,11 +15,11 @@ struct Args {
     refreshinterval: u64,
 
     /// Combine icons
-    #[arg(short, long, default_value_t = true)]
+    #[arg(short, long)]
     combineicons: bool,
 
     /// Enable animated icons
-    #[arg(short, long, default_value_t = true)]
+    #[arg(short, long)]
     animatedicons: bool,
 
     /// Animated icons speed (a parameter in ax+blog10(x) formula used)
