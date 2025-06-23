@@ -7,11 +7,11 @@ use std::{thread, time};
 #[command(version, about, long_about = None)]
 struct Args {
     /// Number of refreshes between information updates
-    #[arg(short, long, default_value_t = 10)]
+    #[arg(short, long, default_value_t = 1)]
     nrefresh: u32,
 
     /// Interval between refreshes (ms)
-    #[arg(short, long, default_value_t = 100)]
+    #[arg(short, long, default_value_t = 1000)]
     refreshinterval: u64,
 
     /// Combine icons
@@ -22,29 +22,17 @@ struct Args {
     #[arg(short, long)]
     animatedicons: bool,
 
-    /// Animated icons speed (a parameter in ax+blog10(x) formula used)
-    #[arg(long, default_value_t = 0.0000001)]
+    /// Animated icons speed (a parameter in ax+blog10(x) formula used) (for high speeds)
+    #[arg(long, default_value_t = 0.0000000000000001)]
     speed_multiplier_lin: f64,
 
-    /// Animated icons speed (b parameter in ax+blog10(x) formula used)
-    #[arg(long, default_value_t = 0.01)]
+    /// Animated icons speed (b parameter in ax+blog10(x) formula used) (for low speeds)
+    #[arg(long, default_value_t = 0.0000000001)]
     speed_multiplier_log10: f64,
 
-    /// Animated icon 0 (down order)
-    #[arg(long, default_value_t = String::from("⡺"))]
-    animatedicon_0: String,
-
-    /// Animated icon 1 (down order)
-    #[arg(long, default_value_t = String::from("⢵"))]
-    animatedicon_1: String,
-
-    /// Animated icon 2 (down order)
-    #[arg(long, default_value_t = String::from("⣫"))]
-    animatedicon_2: String,
-
-    /// Animated icon 3 (down order)
-    #[arg(long, default_value_t = String::from("⢝"))]
-    animatedicon_3: String,
+    /// Animated icon list (down order) ⡺⢵⣫⢝
+    #[arg(long, default_value_t = String::from("▁▃▄▅▆▇█▇▆▅▄▃▁"))]
+    animatediconlist: String,
 
     /// Size of bins (for the dynamic icons) in bytes
     #[arg(short, long, default_value_t = 2048)]
@@ -85,9 +73,10 @@ fn main() {
     let mut refresh_counter = args.nrefresh-1;
     let mut up_anim_counter: f64 = 0.0;
     let mut down_anim_counter: f64 = 0.0;
-
-    // animated icons (in down order)
-    let icons = vec![args.animatedicon_0,args.animatedicon_1,args.animatedicon_2,args.animatedicon_3];
+    let mut lastframetime = time::Instant::now();
+    let mut lastdelay = time::Duration::from_millis(args.refreshinterval);
+    // animated icons (in down order) args.animatediconlist
+    let icons: Vec<char> = args.animatediconlist.chars().collect();
     loop {
         if refresh_counter % args.nrefresh == 0{
             let mut sum_up: u64 = 0;
@@ -106,20 +95,29 @@ fn main() {
         }
         let mut disp_up_icon = args.upicon.clone();
         let mut disp_down_icon = args.downicon.clone();
+        let mut up_add_amount: f64 = 1.;
+        let mut down_add_amount: f64 = 1.;
         if args.animatedicons{
-            disp_up_icon = icons[icons.len()-1-(up_anim_counter.floor() as usize % icons.len())].clone();
-            disp_down_icon = icons[down_anim_counter.floor() as usize % icons.len()].clone();
+            disp_up_icon = String::from(icons[icons.len()-1-(up_anim_counter.floor() as usize % icons.len())].clone());
+            disp_down_icon = String::from(icons[down_anim_counter.floor() as usize % icons.len()].clone());
             if args.combineicons{
             disp_up_icon = format!("{}{}",args.upicon.clone(),disp_up_icon);
             disp_down_icon = format!("{}{}",args.downicon.clone(),disp_down_icon);
             }
-
-            up_anim_counter = (up_anim_counter+args.speed_multiplier_lin*(speed_up as f64)+args.speed_multiplier_log10*((speed_up+1) as f64).log10()) % icons.len() as f64;
-            down_anim_counter =  (down_anim_counter+args.speed_multiplier_lin*(speed_down as f64)+args.speed_multiplier_log10*((speed_down+1) as f64).log10()) % icons.len() as f64;
+            up_add_amount = (args.speed_multiplier_lin*(speed_up as f64)+args.speed_multiplier_log10*((speed_up+1) as f64).log10())*(lastframetime.elapsed().as_nanos() as f64);
+            down_add_amount = (args.speed_multiplier_lin*(speed_down as f64)+args.speed_multiplier_log10*((speed_down+1) as f64).log10())*(lastframetime.elapsed().as_nanos() as f64);
+            up_anim_counter = (up_anim_counter+up_add_amount) % icons.len() as f64;
+            down_anim_counter =  (down_anim_counter+down_add_amount) % icons.len() as f64;
         }
-
         println!("{} {:>10}  {} {:>10}",disp_up_icon,display_speed_unit(speed_up),disp_down_icon,display_speed_unit(speed_down).to_string());
-        thread::sleep(time::Duration::from_millis(args.refreshinterval));
+        lastframetime = time::Instant::now();
+        if up_add_amount > 1.0 || down_add_amount > 1.0 {
+            lastdelay = time::Duration::from_nanos((lastdelay.as_nanos() as f64/up_add_amount.max(down_add_amount)) as u64);
+        }
+        if up_add_amount < 0.1 && down_add_amount < 0.1 {
+            lastdelay = time::Duration::from_millis(args.refreshinterval);
+        }
+        thread::sleep(lastdelay);
         refresh_counter+=1;
     }
 }
